@@ -4,10 +4,10 @@
 reminders, trouble codes explained by AI, a voice assistant, and CarPlay / Android Auto screens.
 Open source (MIT), built with Flutter. Part of the [mzd-kit](https://github.com/jeronimotech/mzd-kit) family.
 
-<img src="docs/img/dashboard.png" width="300" alt="Dashboard in demo mode">
+<img src="docs/img/dashboard.png" width="260" alt="Dashboard in demo mode"> <img src="docs/img/carplay.png" width="440" alt="Mi Mazda on CarPlay (iOS Simulator)">
 
-> **Status: v0.1, early.** Runs on iOS and Android; the CarPlay and Android Auto screens are
-> implemented but not yet validated on a real car (see [CarPlay & Android Auto](#carplay--android-auto)).
+> **Status: v0.1, early.** Runs on iOS and Android. CarPlay works in the iOS Simulator (above);
+> neither CarPlay nor Android Auto has been validated on a real car yet (see [CarPlay & Android Auto](#carplay--android-auto)).
 
 ## What it does
 
