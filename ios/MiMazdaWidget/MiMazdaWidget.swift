@@ -120,7 +120,7 @@ struct MiMazdaStatusWidget: Widget {
     StaticConfiguration(kind: "MiMazdaStatus", provider: StatusProvider()) { entry in
       StatusWidgetView(entry: entry)
     }
-    .configurationDisplayName("Estado de Mi Mazda")
+    .configurationDisplayName("Estado de mi carro")
     .description("Batería, temperatura del motor y próximo mantenimiento.")
     .supportedFamilies([.systemSmall])
   }

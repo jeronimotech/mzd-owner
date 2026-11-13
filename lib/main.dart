@@ -33,7 +33,7 @@ class MzdOwnerApp extends StatelessWidget {
       surface: const Color(0xFF111215),
     );
     return MaterialApp(
-      title: 'Mi Mazda',
+      title: 'MZD Owner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: scheme,

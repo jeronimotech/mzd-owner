@@ -31,7 +31,7 @@ enum CarWidgets {
 
   static func updateStatus(_ a: [String: Any]) {
     MzdStatus(
-      carName: a["carName"] as? String ?? "Mi Mazda",
+      carName: a["carName"] as? String ?? "Mi carro",
       connected: a["connected"] as? Bool ?? false,
       coolant: num(a["coolant"]),
       voltage: num(a["voltage"]),
@@ -58,7 +58,7 @@ enum CarWidgets {
   static func startDrive(_ a: [String: Any]) {
     guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
     if current != nil { return updateDrive(a) }
-    let attributes = MzdDriveAttributes(carName: a["carName"] as? String ?? "Mi Mazda")
+    let attributes = MzdDriveAttributes(carName: a["carName"] as? String ?? "Mi carro")
     _ = try? Activity.request(
       attributes: attributes,
       content: ActivityContent(state: state(a), staleDate: Date().addingTimeInterval(120)),

@@ -45,7 +45,7 @@ class VehicleSnapshot {
 /// The owner's car.
 class CarProfile {
   const CarProfile({
-    this.name = 'Mi Mazda',
+    this.name = 'Mi carro',
     this.model = 'Mazda 3',
     this.year = 2017,
     this.plate = '',
@@ -75,7 +75,7 @@ class CarProfile {
   Map<String, dynamic> toJson() => {'name': name, 'model': model, 'year': year, 'plate': plate, 'odometerKm': odometerKm};
 
   factory CarProfile.fromJson(Map<String, dynamic> j) => CarProfile(
-        name: j['name'] as String? ?? 'Mi Mazda',
+        name: j['name'] as String? ?? 'Mi carro',
         model: j['model'] as String? ?? 'Mazda 3',
         year: (j['year'] as num?)?.toInt() ?? 2017,
         plate: j['plate'] as String? ?? '',

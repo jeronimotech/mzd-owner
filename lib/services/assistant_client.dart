@@ -29,10 +29,13 @@ class AssistantItem {
 /// Client for the mzd-kit bridge assistant (`/v1/assistant/*`). The Anthropic key lives on the
 /// bridge, never in the app.
 class AssistantClient {
-  AssistantClient({required this.baseUrl, this.token, http.Client? client}) : _http = client ?? http.Client();
+  AssistantClient({required this.baseUrl, this.token, this.device, http.Client? client}) : _http = client ?? http.Client();
 
   String baseUrl;
   String? token;
+
+  /// Random per-install id: on the shared cloud bridge each phone gets its own private feed.
+  String? device;
   final http.Client _http;
 
   Uri _uri(String path, [Map<String, String>? q]) {
@@ -47,15 +50,19 @@ class AssistantClient {
         .post(
           _uri('/v1/assistant/ask'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'q': question, 'source': 'phone', 'lat': lat, 'lon': lon, 'speed': speed}),
+          body: jsonEncode({'q': question, 'source': 'phone', 'device': device, 'lat': lat, 'lon': lon, 'speed': speed}),
         )
         .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 429) {
+      final msg = (jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>)['error'];
+      throw msg is String ? msg : 'Demasiadas preguntas, intenta más tarde';
+    }
     if (res.statusCode != 200) throw 'El puente respondió ${res.statusCode}';
     return AssistantItem.fromJson(jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>);
   }
 
   Future<List<AssistantItem>> feed(int since) async {
-    final res = await _http.get(_uri('/v1/assistant/feed', {'since': '$since'})).timeout(const Duration(seconds: 8));
+    final res = await _http.get(_uri('/v1/assistant/feed', {'since': '$since', 'device': ?device})).timeout(const Duration(seconds: 8));
     if (res.statusCode != 200) throw 'El puente respondió ${res.statusCode}';
     final d = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
     return (d['items'] as List).map((e) => AssistantItem.fromJson(e as Map<String, dynamic>)).toList();

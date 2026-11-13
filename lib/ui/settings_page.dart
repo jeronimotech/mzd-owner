@@ -23,7 +23,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _saveProfile() async {
     final s = widget.state;
     await s.updateProfile(s.profile.copyWith(
-      name: _name.text.trim().isEmpty ? 'Mi Mazda' : _name.text.trim(),
+      name: _name.text.trim().isEmpty ? 'Mi carro' : _name.text.trim(),
       model: _model.text.trim(),
       year: int.tryParse(_year.text) ?? s.profile.year,
       plate: _plate.text.trim().toUpperCase(),
@@ -79,17 +79,32 @@ class _SettingsPageState extends State<SettingsPage> {
             subtitle: const Text('Conecta un adaptador OBD-II Bluetooth LE (p. ej. Vgate iCar Pro BLE) al puerto bajo el timón, enciende el carro y toca Conectar en el Tablero.'),
           ),
         const Divider(height: 40),
-        Text('Asistente (puente mzd-kit)', style: title),
-        TextField(controller: _bridge, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'URL del puente', hintText: 'http://192.168.1.10:5173/bridge')),
-        TextField(controller: _token, decoration: const InputDecoration(labelText: 'Token (opcional)')),
-        const SizedBox(height: 12),
-        Row(children: [
-          OutlinedButton(onPressed: _testBridge, child: const Text('Guardar y probar')),
-          const SizedBox(width: 12),
-          if (_bridgeStatus != null) Expanded(child: Text(_bridgeStatus!, style: const TextStyle(color: Colors.white70))),
-        ]),
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: Text('Avanzado', style: title),
+          subtitle: const Text('Usar tu propio puente mzd-kit para el asistente'),
+          children: [
+            TextField(controller: _bridge, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'URL del puente')),
+            TextField(controller: _token, decoration: const InputDecoration(labelText: 'Token (opcional)')),
+            const SizedBox(height: 12),
+            Row(children: [
+              OutlinedButton(onPressed: _testBridge, child: const Text('Guardar y probar')),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () {
+                  _bridge.text = AppState.defaultBridgeUrl;
+                  _token.text = AppState.defaultBridgeToken;
+                  _testBridge();
+                },
+                child: const Text('Restablecer'),
+              ),
+            ]),
+            if (_bridgeStatus != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_bridgeStatus!, style: const TextStyle(color: Colors.white70))),
+            const SizedBox(height: 12),
+          ],
+        ),
         const SizedBox(height: 32),
-        const Text('mzd-owner · código abierto (MIT) · github.com/jeronimotech/mzd-owner', textAlign: TextAlign.center, style: TextStyle(color: Colors.white24, fontSize: 12)),
+        const Text('MZD Owner · código abierto (MIT) · github.com/jeronimotech/mzd-owner\nNo afiliada con Mazda Motor Corporation.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white24, fontSize: 12)),
       ],
     );
   }

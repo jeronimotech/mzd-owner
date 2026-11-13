@@ -16,7 +16,8 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _tab = 0;
+  // MZD_START_TAB is a build-time option used to capture store screenshots of each tab.
+  int _tab = const int.fromEnvironment('MZD_START_TAB');
 
   @override
   Widget build(BuildContext context) {

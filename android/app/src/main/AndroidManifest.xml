@@ -8,11 +8,9 @@
     <!-- Assistant: voice input and the mzd-kit bridge -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Android Auto (Car App Library) -->
-    <uses-feature android:name="android.software.car.app.library" android:required="false"/>
 
     <application
-        android:label="Mi Mazda"
+        android:label="MZD Owner"
         android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -44,22 +42,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Android Auto: templated car app. Category IOT is the closest approved category for
-             vehicle data; Google may require a different one at review time. -->
-        <meta-data
-            android:name="com.google.android.gms.car.application"
-            android:resource="@xml/automotive_app_desc"/>
-        <meta-data
-            android:name="androidx.car.app.minCarApiLevel"
-            android:value="6"/>
-        <service
-            android:name="com.oguzhnatly.flutter_android_auto.AndroidAutoService"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="androidx.car.app.CarAppService"/>
-                <category android:name="androidx.car.app.category.IOT"/>
-            </intent-filter>
-        </service>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

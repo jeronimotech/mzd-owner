@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import '../models/maintenance.dart';
 import '../state/app_state.dart';
 
-/// Feeds the iOS widget ("Estado de Mi Mazda") and the drive Live Activity, which iOS 26
+/// Feeds the iOS widget ("Estado de mi carro") and the drive Live Activity, which iOS 26
 /// also shows on the CarPlay dashboard. No-op on other platforms.
 class CarWidgets {
   CarWidgets(this.state);

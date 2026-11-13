@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,8 +28,13 @@ class AppState extends ChangeNotifier {
   List<MaintenanceItem> maintenance = defaultSchedule();
   bool demoMode = true;
   String? adapterId;
-  String bridgeUrl = 'http://192.168.1.10:5173/bridge';
-  String bridgeToken = '';
+  /// Cloud bridge (mzd-kit on Railway). Overridable at build time and in Ajustes → Avanzado.
+  static const defaultBridgeUrl = String.fromEnvironment('MZD_BRIDGE_URL', defaultValue: 'https://mzd-bridge-production.up.railway.app');
+  static const defaultBridgeToken = String.fromEnvironment('MZD_BRIDGE_TOKEN');
+
+  String bridgeUrl = defaultBridgeUrl;
+  String bridgeToken = defaultBridgeToken;
+  late String deviceId;
 
   VehicleSource? _source;
   StreamSubscription<VehicleSnapshot>? _snapSub;
@@ -43,7 +50,7 @@ class AppState extends ChangeNotifier {
   String get sourceName => _source?.name ?? (demoMode ? 'Modo demo' : 'Adaptador OBD-II');
   bool get connected => sourceState == SourceState.connected;
 
-  AssistantClient get assistant => AssistantClient(baseUrl: bridgeUrl, token: bridgeToken.isEmpty ? null : bridgeToken);
+  AssistantClient get assistant => AssistantClient(baseUrl: bridgeUrl, token: bridgeToken.isEmpty ? null : bridgeToken, device: deviceId);
 
   // ---------------------------------------------------------------- persistence
 
@@ -59,7 +66,14 @@ class AppState extends ChangeNotifier {
     demoMode = _prefs.getBool('demoMode') ?? true;
     adapterId = _prefs.getString('adapterId');
     bridgeUrl = _prefs.getString('bridgeUrl') ?? bridgeUrl;
-    bridgeToken = _prefs.getString('bridgeToken') ?? '';
+    bridgeToken = _prefs.getString('bridgeToken') ?? bridgeToken;
+    deviceId = _prefs.getString('deviceId') ?? _newDeviceId();
+    _prefs.setString('deviceId', deviceId);
+  }
+
+  static String _newDeviceId() {
+    final r = Random.secure();
+    return List.generate(16, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
   }
 
   Future<void> _save() async {
@@ -112,6 +126,14 @@ class AppState extends ChangeNotifier {
     });
     _snapSub = src.snapshots.listen(_onSnapshot);
     await src.connect();
+    // Check the engine's trouble codes right away, like glancing at the check-engine light.
+    // (src.state, not sourceState: the state stream notifies listeners asynchronously.)
+    if (src.state == SourceState.connected) {
+      sourceState = SourceState.connected;
+      try {
+        await readDtcs();
+      } catch (_) {}
+    }
   }
 
   void _onSnapshot(VehicleSnapshot s) {

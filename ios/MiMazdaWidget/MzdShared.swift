@@ -9,7 +9,7 @@ enum MzdShared {
   static let statusKey = "mzd.status"
 }
 
-/// Snapshot written by the app and read by the "Estado de Mi Mazda" widget.
+/// Snapshot written by the app and read by the "Estado de mi carro" widget.
 struct MzdStatus: Codable {
   var carName: String
   var connected: Bool
@@ -24,7 +24,7 @@ struct MzdStatus: Codable {
   var updated: Date
 
   static let placeholder = MzdStatus(
-    carName: "Mi Mazda", connected: true, coolant: 90, voltage: 14.2, fuel: 64,
+    carName: "Mi carro", connected: true, coolant: 90, voltage: 14.2, fuel: 64,
     serviceTitle: "Aceite y filtro", serviceLabel: "En 1.200 km", serviceLevel: "soon",
     dtcCount: 0, updated: Date())
 
