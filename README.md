@@ -49,7 +49,8 @@ only for approved app categories.
 
 **CarPlay** — category *driving task* (`com.apple.developer.carplay-driving-task`), refreshed every 10 s.
 - Try it: run on the iOS Simulator, then **Simulator → I/O → External Displays → CarPlay**.
-- On a real car: [request the entitlement from Apple](https://developer.apple.com/contact/carplay) and add it to the provisioning profile.
+- On a real car: [request the entitlement from Apple](https://developer.apple.com/contact/carplay) (draft answers in [docs/CARPLAY_ENTITLEMENT.md](docs/CARPLAY_ENTITLEMENT.md)) and add it to the provisioning profile.
+- Car screens can't draw custom UI, so the gauges are rendered on the phone as images and shown in iOS 26 list cards; icons are tinted by status (red overdue, amber soon, green OK).
 
 **Android Auto** — Car App Library service, category `IOT` (closest fit; Google decides at review).
 - Try it with the [Desktop Head Unit](https://developer.android.com/training/cars/testing/dhu).

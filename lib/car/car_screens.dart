@@ -5,8 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_carplay/flutter_carplay.dart';
 
 import '../models/maintenance.dart';
+import '../models/vehicle.dart';
 import '../state/app_state.dart';
 import '../ui/format.dart';
+import 'gauge_renderer.dart';
 
 /// The app on the car's screen: CarPlay (iPhone) and Android Auto (Android).
 ///
@@ -21,10 +23,15 @@ class CarScreens {
 
   Timer? _timer;
 
+  final _gauges = GaugeRenderer();
+
   // CarPlay
   FlutterCarplay? _carplay;
-  CPListItem? _cpDash, _cpMaint, _cpDiag;
+  CPListImageRowItem? _cpGauges;
+  List<CPListItem> _cpMaintRows = [];
+  CPListItem? _cpDiag;
   CPInformationTemplate? _cpDashInfo;
+  bool _rendering = false;
 
   // Android Auto
   FlutterAndroidAuto? _aa;
@@ -89,61 +96,172 @@ class CarScreens {
         _ => '',
       };
 
+  // ---------------------------------------------------------------- gauges (artwork)
+
+  /// The four gauges shown as cards: (key, title, value, unit, fraction, warn).
+  List<(String, String, String, String, double, bool)> _gaugeSpecs(VehicleSnapshot v) => [
+        ('speed', 'Velocidad', fmtNum(v.speed), 'km/h', (v.speed ?? 0) / 180, false),
+        ('rpm', 'RPM', fmtNum(v.rpm), 'rpm', (v.rpm ?? 0) / 7000, (v.rpm ?? 0) > 6000),
+        ('coolant', 'Motor', fmtNum(v.coolantTemp, unit: '°'), 'temp', ((v.coolantTemp ?? 0) - 20) / 100, (v.coolantTemp ?? 0) > 105),
+        ('battery', 'Batería', fmtNum(v.voltage, decimals: 1), 'voltios', ((v.voltage ?? 11) - 11) / 4,
+            v.voltage != null && (v.voltage! < 12 || v.voltage! > 15)),
+      ];
+
+  Future<List<CPListImageRowItemCardElement>> _gaugeCards() async {
+    final live = state.connected;
+    final cards = <CPListImageRowItemCardElement>[];
+    for (final g in _gaugeSpecs(state.live)) {
+      final file = await _gauges.render(key: g.$1, value: g.$3, unit: g.$4, fraction: g.$5, warn: g.$6, live: live);
+      cards.add(CPListImageRowItemCardElement(image: file, title: g.$2, showsImageFullHeight: true));
+    }
+    return cards;
+  }
+
+  String _liveLabel() => switch (state.sourceState.name) {
+        'connected' => 'En vivo · ${state.sourceName}',
+        'connecting' => 'Conectando…',
+        _ => 'Sin conexión · abre la app en el celular',
+      };
+
   // ---------------------------------------------------------------- CarPlay
 
-  void _startCarPlay() {
-    _carplay = FlutterCarplay();
-    _cpDash = CPListItem(text: 'Tablero', detailText: _dashSummary(), onPress: (done, _) async {
-      try {
-        _cpDashInfo = CPInformationTemplate(
-          title: 'Tablero',
-          layout: CPInformationTemplateLayout.twoColumn,
-          informationItems: [for (final r in _dashboardRows()) CPInformationItem(title: r.$1, detail: r.$2)],
-          actions: const [],
-          onPop: () => _cpDashInfo = null,
-        );
-        await FlutterCarplay.push(template: _cpDashInfo!);
-      } finally {
-        done();
-      }
-    });
-    _cpMaint = CPListItem(text: 'Mantenimiento', detailText: _maintSummary(), onPress: (done, _) async {
-      try {
-        await FlutterCarplay.push(
-          template: CPListTemplate(title: 'Mantenimiento', sections: [
-            CPListSection(items: [for (final r in _maintRows()) CPListItem(text: r.$1, detailText: r.$2)]),
-          ]),
-        );
-      } finally {
-        done();
-      }
-    });
-    _cpDiag = CPListItem(text: 'Diagnóstico', detailText: _diagSummary(), onPress: (done, _) async {
-      try {
-        if (state.connected) await state.readDtcs();
-        final codes = state.dtcs ?? const <String>[];
-        await FlutterCarplay.push(
-          template: CPInformationTemplate(
-            title: 'Diagnóstico',
-            layout: CPInformationTemplateLayout.leading,
-            informationItems: codes.isEmpty
-                ? [CPInformationItem(title: 'Códigos de falla', detail: state.connected ? 'Ninguno' : 'Conecta el carro')]
-                : [for (final c in codes) CPInformationItem(title: c, detail: 'Pide la explicación en el celular')],
-            actions: const [],
-          ),
-        );
-      } catch (_) {
-        // reading codes can fail if the adapter drops; the list detail shows the state
-      } finally {
-        done();
-        _refresh();
-      }
-    });
+  static const _redTint = AutoImageTint.custom(color: UIColor(red: 230, green: 40, blue: 60), darkColor: UIColor(red: 255, green: 90, blue: 105));
+  static const _amberTint = AutoImageTint.custom(color: UIColor(red: 230, green: 140, blue: 20), darkColor: UIColor(red: 255, green: 180, blue: 70));
+  static const _greenTint = AutoImageTint.custom(color: UIColor(red: 30, green: 160, blue: 90), darkColor: UIColor(red: 60, green: 215, blue: 130));
+  static const _greyTint = AutoImageTint.platform();
 
-    FlutterCarplay.setRootTemplate(
+  AutoImageTint _tintFor(DueLevel l) => switch (l) {
+        DueLevel.due => _redTint,
+        DueLevel.soon => _amberTint,
+        DueLevel.ok => _greenTint,
+        DueLevel.unknown => _greyTint,
+      };
+
+  List<CPListItem> _maintItems() {
+    final urgent = state.maintenanceByUrgency.take(3).toList();
+    return [
+      for (final i in urgent)
+        CPListItem(
+          text: i.title,
+          detailText: state.statusOf(i).label,
+          image: state.statusOf(i).level == DueLevel.due ? 'assets/car/alert.svg' : 'assets/car/wrench.svg',
+          imageTint: _tintFor(state.statusOf(i).level),
+        ),
+      CPListItem(
+        text: 'Ver todo el mantenimiento',
+        image: 'assets/car/list.svg',
+        imageTint: _greyTint,
+        accessoryType: CPListItemAccessoryType.disclosureIndicator,
+        onPress: (done, _) async {
+          try {
+            await FlutterCarplay.push(
+              template: CPListTemplate(title: 'Mantenimiento', sections: [
+                CPListSection(items: [
+                  for (final i in state.maintenanceByUrgency)
+                    CPListItem(
+                      text: i.title,
+                      detailText: state.statusOf(i).label,
+                      image: 'assets/car/wrench.svg',
+                      imageTint: _tintFor(state.statusOf(i).level),
+                    ),
+                ]),
+              ]),
+            );
+          } finally {
+            done();
+          }
+        },
+      ),
+    ];
+  }
+
+  AutoImageTint _diagTint() {
+    final c = state.dtcs;
+    if (c == null) return _greyTint;
+    return c.isEmpty ? _greenTint : _amberTint;
+  }
+
+  Future<void> _openDashboard() async {
+    _cpDashInfo = CPInformationTemplate(
+      title: 'Tablero',
+      layout: CPInformationTemplateLayout.twoColumn,
+      informationItems: [for (final r in _dashboardRows()) CPInformationItem(title: r.$1, detail: r.$2)],
+      actions: const [],
+      onPop: () => _cpDashInfo = null,
+    );
+    await FlutterCarplay.push(template: _cpDashInfo!);
+  }
+
+  Future<void> _startCarPlay() async {
+    _carplay = FlutterCarplay();
+    FlutterCarplay.iconSize = const AutoImageSize.medium();
+
+    final cards = await _gaugeCards();
+    _cpGauges = CPListImageRowItem(
+      text: _liveLabel(),
+      elements: cards,
+      gridImages: [for (final c in cards) c.image],
+      imageTitles: [for (final c in cards) c.title ?? ''],
+      onPress: (done, _) async {
+        try {
+          await _openDashboard();
+        } finally {
+          done();
+        }
+      },
+      onItemPress: (done, _, _) async {
+        try {
+          await _openDashboard();
+        } finally {
+          done();
+        }
+      },
+    );
+    _cpMaintRows = _maintItems();
+    _cpDiag = CPListItem(
+      text: 'Códigos de falla',
+      detailText: _diagSummary(),
+      image: 'assets/car/shield.svg',
+      imageTint: _diagTint(),
+      accessoryType: CPListItemAccessoryType.disclosureIndicator,
+      onPress: (done, item) async {
+        try {
+          if (state.connected) await state.readDtcs();
+          final codes = state.dtcs ?? const <String>[];
+          item.setDetailText(_diagSummary());
+          await FlutterCarplay.push(
+            template: CPListTemplate(
+              title: 'Diagnóstico',
+              sections: [
+                CPListSection(items: [
+                  if (codes.isEmpty)
+                    CPListItem(
+                      text: state.connected ? 'Sin códigos de falla' : 'Conecta el carro',
+                      image: 'assets/car/shield.svg',
+                      imageTint: state.connected ? _greenTint : _greyTint,
+                    ),
+                  for (final c in codes)
+                    CPListItem(text: c, detailText: 'Pide la explicación en el celular', image: 'assets/car/alert.svg', imageTint: _amberTint),
+                ]),
+              ],
+            ),
+          );
+        } catch (_) {
+          // reading codes can fail if the adapter drops; the row detail shows the state
+        } finally {
+          done();
+        }
+      },
+    );
+
+    await FlutterCarplay.setRootTemplate(
       rootTemplate: CPListTemplate(
         title: state.profile.name,
-        sections: [CPListSection(items: [_cpDash!, _cpMaint!, _cpDiag!])],
+        sections: [
+          CPListSection(items: [_cpGauges!]),
+          CPListSection(header: 'Mantenimiento', items: _cpMaintRows),
+          CPListSection(header: 'Diagnóstico', items: [_cpDiag!]),
+        ],
         systemIcon: 'car.fill',
       ),
       animated: false,
@@ -153,18 +271,31 @@ class CarScreens {
     });
   }
 
-  void _refreshCarPlay() {
-    if (_carplay == null) return;
+  Future<void> _refreshCarPlay() async {
+    if (_carplay == null || _cpGauges == null) return;
     if (FlutterCarplay.connectionStatus != ConnectionStatusTypes.connected.name) return;
-    _cpDash?.setDetailText(_dashSummary());
-    _cpMaint?.setDetailText(_maintSummary());
-    _cpDiag?.setDetailText(_diagSummary());
-    final info = _cpDashInfo;
-    if (info != null) {
-      _carplay!.updateInformationTemplateItems(
-        elementId: info.uniqueId,
-        items: [for (final r in _dashboardRows()) CPInformationItem(title: r.$1, detail: r.$2)],
-      );
+    if (_rendering) return;
+    _rendering = true;
+    try {
+      _cpGauges!.setElements(await _gaugeCards());
+      _cpGauges!.setText(_liveLabel());
+      final urgent = state.maintenanceByUrgency.take(3).toList();
+      for (var i = 0; i < urgent.length && i < _cpMaintRows.length - 1; i++) {
+        _cpMaintRows[i].setText(urgent[i].title);
+        _cpMaintRows[i].setDetailText(state.statusOf(urgent[i]).label);
+        _cpMaintRows[i].setImageTint(_tintFor(state.statusOf(urgent[i]).level));
+      }
+      _cpDiag?.setDetailText(_diagSummary());
+      _cpDiag?.setImageTint(_diagTint());
+      final info = _cpDashInfo;
+      if (info != null) {
+        await _carplay!.updateInformationTemplateItems(
+          elementId: info.uniqueId,
+          items: [for (final r in _dashboardRows()) CPInformationItem(title: r.$1, detail: r.$2)],
+        );
+      }
+    } finally {
+      _rendering = false;
     }
   }
 
