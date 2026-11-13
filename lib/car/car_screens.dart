@@ -140,16 +140,64 @@ class CarScreens {
         DueLevel.unknown => _greyTint,
       };
 
+  /// Detail of one maintenance item, with a "Marcar como hecho" action.
+  Future<void> _openMaintenance(MaintenanceItem item) async {
+    final st = state.statusOf(item);
+    final every = [
+      if (item.everyKm != null) 'cada ${fmtKm(item.everyKm!.toDouble())}',
+      if (item.everyMonths != null) 'cada ${item.everyMonths} meses',
+    ].join(' o ');
+    await FlutterCarplay.push(
+      template: CPInformationTemplate(
+        title: item.title,
+        layout: CPInformationTemplateLayout.leading,
+        informationItems: [
+          CPInformationItem(title: 'Estado', detail: st.label),
+          CPInformationItem(
+            title: 'Último servicio',
+            detail: item.lastDate == null
+                ? 'Sin registrar'
+                : '${fmtDate(item.lastDate!)}${item.lastKm != null ? ' · ${fmtKm(item.lastKm!)}' : ''}',
+          ),
+          CPInformationItem(title: 'Intervalo', detail: every.isEmpty ? '—' : every),
+          CPInformationItem(title: 'Odómetro', detail: fmtKm(state.profile.odometerKm)),
+        ],
+        actions: [
+          CPTextButton(
+            title: 'Marcar como hecho',
+            textstyle: CPTextButtonStyle.confirm,
+            onPress: () async {
+              await state.markDone(item.id);
+              await FlutterCarplay.pop();
+              _refresh();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  CPListItem _maintRow(MaintenanceItem i, int index) => CPListItem(
+        text: i.title,
+        detailText: state.statusOf(i).label,
+        image: state.statusOf(i).level == DueLevel.due ? 'assets/car/alert.svg' : 'assets/car/wrench.svg',
+        imageTint: _tintFor(state.statusOf(i).level),
+        accessoryType: CPListItemAccessoryType.disclosureIndicator,
+        onPress: (done, _) async {
+          try {
+            // Resolve by position at tap time: refreshes may have reordered the rows.
+            final items = state.maintenanceByUrgency;
+            if (index < items.length) await _openMaintenance(items[index]);
+          } finally {
+            done();
+          }
+        },
+      );
+
   List<CPListItem> _maintItems() {
     final urgent = state.maintenanceByUrgency.take(3).toList();
     return [
-      for (final i in urgent)
-        CPListItem(
-          text: i.title,
-          detailText: state.statusOf(i).label,
-          image: state.statusOf(i).level == DueLevel.due ? 'assets/car/alert.svg' : 'assets/car/wrench.svg',
-          imageTint: _tintFor(state.statusOf(i).level),
-        ),
+      for (var n = 0; n < urgent.length; n++) _maintRow(urgent[n], n),
       CPListItem(
         text: 'Ver todo el mantenimiento',
         image: 'assets/car/list.svg',
@@ -160,13 +208,7 @@ class CarScreens {
             await FlutterCarplay.push(
               template: CPListTemplate(title: 'Mantenimiento', sections: [
                 CPListSection(items: [
-                  for (final i in state.maintenanceByUrgency)
-                    CPListItem(
-                      text: i.title,
-                      detailText: state.statusOf(i).label,
-                      image: 'assets/car/wrench.svg',
-                      imageTint: _tintFor(state.statusOf(i).level),
-                    ),
+                  for (var n = 0; n < state.maintenanceByUrgency.length; n++) _maintRow(state.maintenanceByUrgency[n], n),
                 ]),
               ]),
             );
@@ -259,9 +301,10 @@ class CarScreens {
       rootTemplate: CPListTemplate(
         title: state.profile.name,
         sections: [
-          CPListSection(items: [_cpGauges!]),
-          CPListSection(header: 'Mantenimiento', items: _cpMaintRows),
-          CPListSection(header: 'Diagnóstico', items: [_cpDiag!]),
+          // sectionIndexEnabled: false hides the A–Z index iOS adds for titled sections.
+          CPListSection(items: [_cpGauges!], sectionIndexEnabled: false),
+          CPListSection(header: 'Mantenimiento', items: _cpMaintRows, sectionIndexEnabled: false),
+          CPListSection(header: 'Diagnóstico', items: [_cpDiag!], sectionIndexEnabled: false),
         ],
         systemIcon: 'car.fill',
       ),
