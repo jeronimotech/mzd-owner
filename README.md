@@ -18,6 +18,7 @@ Open source (MIT), built with Flutter. Part of the [mzd-kit](https://github.com/
 | **Diagnóstico** | Reads stored trouble codes (check engine) and explains them with AI for your exact model. |
 | **Asistente** | Ask by voice or text; answers are read aloud. Uses the [mzd-kit bridge](https://github.com/jeronimotech/mzd-kit/blob/main/docs/ASSISTANT.md) (Claude + web search), so questions and answers are shared with the car's native screen too. |
 | **CarPlay / Android Auto** | Tablero, Servicio and Diagnóstico on the car's display using native templates. |
+| **Widget + Live Activity** | "Estado de Mi Mazda" widget (battery, engine temperature, next service) and an "En ruta" Live Activity (speed, RPM, temperature, battery) on the lock screen, Dynamic Island and — on iOS 26 — the CarPlay dashboard, with no CarPlay entitlement needed. |
 
 No adapter yet? **Demo mode** (on by default) simulates a city drive.
 
@@ -56,6 +57,11 @@ only for approved app categories.
 - Try it with the [Desktop Head Unit](https://developer.android.com/training/cars/testing/dhu).
 
 Built on [flutter_carplay](https://pub.dev/packages/flutter_carplay) (MIT).
+
+**Widgets & Live Activities on CarPlay (iOS 26)** — the richest look available without the
+navigation category: they're SwiftUI (fully custom design), shown StandBy-style on the CarPlay
+dashboard. Source: `ios/MiMazdaWidget/`, fed from Flutter through the `mzd/car_widgets` channel.
+The widget appears on CarPlay's widget page; the drive Live Activity starts when the car connects.
 
 ## Architecture
 

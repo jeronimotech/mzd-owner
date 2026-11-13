@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'car/car_screens.dart';
+import 'services/car_widgets.dart';
 import 'state/app_state.dart';
 import 'ui/home.dart';
 
@@ -12,6 +13,7 @@ Future<void> main() async {
   // Car screens are set up at startup (not from a phone screen) so CarPlay / Android Auto
   // can launch the app without the phone UI being opened first.
   CarScreens(state).start();
+  CarWidgets(state).start(); // iPhone + CarPlay widget and drive Live Activity
   runApp(MzdOwnerApp(state: state));
   // Reconnect on launch when there's something to connect to (demo, or a remembered adapter),
   // so getting in the car and opening CarPlay is enough.

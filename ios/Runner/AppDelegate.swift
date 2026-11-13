@@ -13,6 +13,7 @@ let flutterEngine = FlutterEngine(name: "SharedEngine", project: nil, allowHeadl
   ) -> Bool {
     flutterEngine.run()
     GeneratedPluginRegistrant.register(with: flutterEngine)
+    CarWidgets.register(with: flutterEngine.binaryMessenger)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

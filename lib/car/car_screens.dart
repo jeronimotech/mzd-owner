@@ -98,21 +98,24 @@ class CarScreens {
 
   // ---------------------------------------------------------------- gauges (artwork)
 
-  /// The four gauges shown as cards: (key, title, value, unit, fraction, warn).
-  List<(String, String, String, String, double, bool)> _gaugeSpecs(VehicleSnapshot v) => [
-        ('speed', 'Velocidad', fmtNum(v.speed), 'km/h', (v.speed ?? 0) / 180, false),
-        ('rpm', 'RPM', fmtNum(v.rpm), 'rpm', (v.rpm ?? 0) / 7000, (v.rpm ?? 0) > 6000),
-        ('coolant', 'Motor', fmtNum(v.coolantTemp, unit: '°'), 'temp', ((v.coolantTemp ?? 0) - 20) / 100, (v.coolantTemp ?? 0) > 105),
-        ('battery', 'Batería', fmtNum(v.voltage, decimals: 1), 'voltios', ((v.voltage ?? 11) - 11) / 4,
+  /// The four gauges shown as cards: (key, value, label, fraction, warn).
+  List<(String, String, String, double, bool)> _gaugeSpecs(VehicleSnapshot v) => [
+        ('speed', fmtNum(v.speed), 'km/h', (v.speed ?? 0) / 180, false),
+        ('rpm', fmtNum(v.rpm), 'rpm', (v.rpm ?? 0) / 7000, (v.rpm ?? 0) > 6000),
+        ('coolant', fmtNum(v.coolantTemp, unit: '°'), 'motor', ((v.coolantTemp ?? 0) - 20) / 100, (v.coolantTemp ?? 0) > 105),
+        ('battery', fmtNum(v.voltage, decimals: 1), 'batería V', ((v.voltage ?? 11) - 11) / 4,
             v.voltage != null && (v.voltage! < 12 || v.voltage! > 15)),
       ];
 
+  int _gaugeVersion = 0;
+
   Future<List<CPListImageRowItemCardElement>> _gaugeCards() async {
     final live = state.connected;
+    final version = ++_gaugeVersion;
     final cards = <CPListImageRowItemCardElement>[];
     for (final g in _gaugeSpecs(state.live)) {
-      final file = await _gauges.render(key: g.$1, value: g.$3, unit: g.$4, fraction: g.$5, warn: g.$6, live: live);
-      cards.add(CPListImageRowItemCardElement(image: file, title: g.$2, showsImageFullHeight: true));
+      final png = await _gauges.render(value: g.$2, label: g.$3, fraction: g.$4, warn: g.$5, live: live);
+      cards.add(_PngCardElement(png: png, image: 'mzd-gauge-${g.$1}-$version'));
     }
     return cards;
   }
@@ -200,8 +203,6 @@ class CarScreens {
     _cpGauges = CPListImageRowItem(
       text: _liveLabel(),
       elements: cards,
-      gridImages: [for (final c in cards) c.image],
-      imageTitles: [for (final c in cards) c.title ?? ''],
       onPress: (done, _) async {
         try {
           await _openDashboard();
@@ -395,4 +396,17 @@ class CarScreens {
       debugPrint('car screens refresh failed: $e');
     }
   }
+}
+
+/// Card element that carries its artwork as PNG bytes (`imageData`), which the native side
+/// applies synchronously. [image] is only an identifier for the native image cache.
+class _PngCardElement extends CPListImageRowItemCardElement {
+  // Full slot size, no title: the label is drawn inside the gauge.
+  _PngCardElement({required this.png, required super.image})
+      : super(showsImageFullHeight: true, imageSize: const AutoImageSize.max());
+
+  final Uint8List png;
+
+  @override
+  Map<String, dynamic> toJson() => {...super.toJson(), 'imageData': png};
 }

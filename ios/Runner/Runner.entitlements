@@ -7,5 +7,10 @@
 	     (https://developer.apple.com/contact/carplay). -->
 	<key>com.apple.developer.carplay-driving-task</key>
 	<true/>
+	<!-- Shared with the MiMazdaWidget extension (widget + Live Activity data). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.jeronimotech.mzdOwner</string>
+	</array>
 </dict>
 </plist>

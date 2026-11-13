@@ -1,28 +1,26 @@
-import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-/// Renders gauge "cards" as PNG files for CarPlay / Android Auto.
+/// Renders gauge "cards" as PNG images for CarPlay / Android Auto.
 ///
 /// Car platforms only allow native templates, but templates accept images — so the look of
 /// the phone dashboard (arc gauge, big number, Soul Red) is drawn here and shipped as artwork.
 class GaugeRenderer {
-  GaugeRenderer({this.width = 420, this.height = 300});
+  GaugeRenderer({this.width = 360, this.height = 360});
 
   final int width;
   final int height;
-  int _version = 0;
-  final Map<String, String> _lastFile = {};
 
   static const soulRed = ui.Color(0xFFC8102E);
   static const warnColor = ui.Color(0xFFFFA726);
 
-  /// Draws one gauge and returns a `file://` URL. A new file per version so the car host
-  /// doesn't serve a cached image; the previous file for the same [key] is deleted.
-  Future<String> render({
-    required String key,
+  /// Draws one gauge and returns PNG bytes. Bytes (not files) are sent to the car host:
+  /// the native side applies them synchronously when it builds the element, while a file
+  /// would load after the element is already on screen and never show up.
+  Future<Uint8List> render({
     required String value,
-    required String unit,
+    required String label,
     required double fraction,
     bool warn = false,
     bool live = true,
@@ -31,24 +29,17 @@ class GaugeRenderer {
     final canvas = ui.Canvas(recorder);
     final w = width.toDouble(), h = height.toDouble();
 
-    // card background
-    final bg = ui.Paint()
-      ..shader = ui.Gradient.linear(
-        ui.Offset.zero,
-        ui.Offset(w, h),
-        [const ui.Color(0xFF24262C), const ui.Color(0xFF111215)],
-      );
-    canvas.drawRRect(ui.RRect.fromRectAndRadius(ui.Rect.fromLTWH(0, 0, w, h), const ui.Radius.circular(36)), bg);
-
-    // arc
-    final center = ui.Offset(w / 2, h * 0.64);
-    final radius = min(w * 0.40, h * 0.52);
+    // Transparent background: the gauge sits directly on CarPlay's own card material,
+    // so there's no box-in-a-box and it matches light and dark car themes.
+    final center = ui.Offset(w / 2, h * 0.53);
+    final radius = w * 0.42;
     final rect = ui.Rect.fromCircle(center: center, radius: radius);
-    const start = pi * 0.85, sweep = pi * 1.3;
+    const start = pi * 0.8, sweep = pi * 1.4;
+    const stroke = 30.0;
     final track = ui.Paint()
-      ..color = const ui.Color(0xFF34373E)
+      ..color = const ui.Color(0x33FFFFFF)
       ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 22
+      ..strokeWidth = stroke
       ..strokeCap = ui.StrokeCap.round;
     canvas.drawArc(rect, start, sweep, false, track);
     final f = live ? fraction.clamp(0.0, 1.0) : 0.0;
@@ -57,37 +48,26 @@ class GaugeRenderer {
       final fg = ui.Paint()
         ..shader = ui.Gradient.sweep(
           center,
-          [accent.withValues(alpha: 0.55), accent],
-          null,
+          [accent.withValues(alpha: 0.65), accent, warn ? warnColor : const ui.Color(0xFFFF3B55)],
+          const [0.0, 0.6, 1.0],
           ui.TileMode.clamp,
           start,
           start + sweep,
         )
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 22
+        ..strokeWidth = stroke
         ..strokeCap = ui.StrokeCap.round;
       canvas.drawArc(rect, start, sweep * f, false, fg);
     }
 
-    // value + unit
-    _text(canvas, live ? value : '--', w, center.dy - 62, 92, ui.FontWeight.w800, const ui.Color(0xFFFFFFFF));
-    _text(canvas, unit.toUpperCase(), w, center.dy + 38, 30, ui.FontWeight.w600,
-        warn ? warnColor : const ui.Color(0xB3FFFFFF), letterSpacing: 4);
+    _text(canvas, live ? value : '--', w, center.dy - 66, 104, ui.FontWeight.w800, const ui.Color(0xFFFFFFFF));
+    _text(canvas, label.toUpperCase(), w, center.dy + 50, 30, ui.FontWeight.w700,
+        warn ? warnColor : const ui.Color(0xCCFFFFFF), letterSpacing: 3);
 
     final image = await recorder.endRecording().toImage(width, height);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    final dir = Directory('${Directory.systemTemp.path}/mzd_car');
-    if (!dir.existsSync()) dir.createSync(recursive: true);
-    final file = File('${dir.path}/${key}_${++_version}.png');
-    await file.writeAsBytes(bytes!.buffer.asUint8List(), flush: true);
-    final old = _lastFile[key];
-    _lastFile[key] = file.path;
-    if (old != null) {
-      try {
-        File(old).deleteSync();
-      } catch (_) {}
-    }
-    return file.uri.toString();
+    image.dispose();
+    return bytes!.buffer.asUint8List();
   }
 
   void _text(ui.Canvas canvas, String text, double w, double top, double size, ui.FontWeight weight, ui.Color color,
