@@ -1,0 +1,9 @@
+{
+  "name": "mzd-owner-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MZD Owner website: landing, privacy and terms",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node server.mjs" }
+}

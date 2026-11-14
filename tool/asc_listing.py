@@ -43,9 +43,9 @@ DOC = HERE.parent / "docs" / "STORE-LISTING.md"
 APP_NAME = "MZD Owner"
 API = "https://api.appstoreconnect.apple.com/v1"
 
-SUPPORT_URL = "https://jeronimotech.github.io/mzd-owner/"
-MARKETING_URL = "https://github.com/jeronimotech/mzd-owner"
-PRIVACY_URL = "https://jeronimotech.github.io/mzd-owner/privacy.html"
+SUPPORT_URL = "https://mzd-web-production.up.railway.app/#preguntas"
+MARKETING_URL = "https://mzd-web-production.up.railway.app/"
+PRIVACY_URL = "https://mzd-web-production.up.railway.app/privacidad"
 
 # The doc is keyed by Play locale codes. Apple uses its own, and they disagree for five of seven.
 PLAY_TO_APPLE = {

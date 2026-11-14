@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacidad · MZD Owner</title>
+<meta name="description" content="Política de privacidad de MZD Owner.">
+<meta name="theme-color" content="#b3122d">
+<link rel="icon" href="/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=4">
+</head>
+<body>
+<header class="wrap nav">
+  <a class="brand" href="/"><img src="/img/icon.png" alt="" width="36" height="36">MZD Owner</a>
+  <nav class="nav-links" aria-label="Principal">
+    <a href="/privacidad" aria-current="page">Privacidad</a>
+    <a href="/terminos">Términos</a>
+  </nav>
+</header>
+<main class="wrap"><article class="legal">
+<h1>Política de privacidad</h1>
+<p class="updated">Última actualización: 13 de noviembre de 2026 · <a href="#en">English</a></p>
+
+<p>MZD Owner es una app de código abierto de Jeronimo SAS (JeronimoTech), en Bogotá, Colombia. No tiene cuentas de usuario, no muestra publicidad, no rastrea tu actividad en otras apps y no vende datos.</p>
+
+<h2>Qué datos usa la app</h2>
+<table>
+  <tr><th>Dato</th><th>Para qué</th><th>Dónde queda</th></tr>
+  <tr><td>Datos del carro leídos por Bluetooth: velocidad, revoluciones, temperaturas, voltaje y códigos de falla</td><td>El tablero, el diagnóstico, el widget y la actividad en vivo</td><td>Solo en tu celular</td></tr>
+  <tr><td>Perfil del carro, kilometraje y bitácora de mantenimiento</td><td>Los recordatorios de mantenimiento</td><td>Solo en tu celular</td></tr>
+  <tr><td>Preguntas al asistente, la velocidad del carro y un identificador aleatorio de la instalación</td><td>Responder tu pregunta</td><td>Nuestro servidor (Railway, Estados Unidos) y Anthropic</td></tr>
+  <tr><td>Tu voz, cuando dictas una pregunta</td><td>Convertirla en texto</td><td>El sistema operativo de tu celular (Apple o Google), según su propia política</td></tr>
+</table>
+
+<h2>El asistente de IA</h2>
+<p>Cuando haces una pregunta, la enviamos con la velocidad del carro y un identificador aleatorio que se crea al instalar la app. Ese identificador no contiene tu nombre, tu correo ni datos de tu celular. Nuestro servidor reenvía la pregunta a la API de Anthropic (Claude), que genera la respuesta según su <a href="https://www.anthropic.com/legal/privacy">política de privacidad</a> y sus términos comerciales.</p>
+<p>Nuestro servidor guarda en memoria las últimas preguntas y respuestas de cada identificador para mostrarte el historial. No las escribe en disco y se borran cuando el servidor se reinicia. No incluyas datos personales sensibles en tus preguntas.</p>
+
+<h2>Permisos que pide la app</h2>
+<ul>
+  <li><b>Bluetooth</b>, para conectarse al adaptador OBD-II, también en segundo plano mientras manejas.</li>
+  <li><b>Micrófono y reconocimiento de voz</b>, solo cuando tocas el botón de micrófono.</li>
+  <li><b>Red local</b>, solo si configuras tu propio servidor en Ajustes, Avanzado.</li>
+</ul>
+
+<h2>Tus opciones</h2>
+<p>Puedes usar la app sin el asistente. Para borrar todos tus datos, elimina la app. Para preguntas sobre privacidad o para ejercer tus derechos bajo la Ley 1581 de 2012, abre un caso en <a href="https://github.com/jeronimotech/mzd-owner/issues">GitHub</a>.</p>
+
+<h2>Menores de edad</h2>
+<p>La app no está dirigida a menores de 13 años y no recopila sus datos a sabiendas.</p>
+
+<h2>Cambios</h2>
+<p>Si cambiamos esta política, publicaremos la nueva versión en esta página con su fecha.</p>
+
+<h2 id="en">English summary</h2>
+<p>MZD Owner is open-source software by Jeronimo SAS (JeronimoTech). No accounts, no ads, no cross-app tracking, no data sales. Vehicle data, your car profile and maintenance log stay on your phone. Assistant questions, the car's speed and a random per-install identifier go to our server (Railway, USA) and to Anthropic to generate the answer; our server keeps recent questions in memory only. Voice dictation is handled by your phone's operating system. Delete the app to remove all data. Contact us through <a href="https://github.com/jeronimotech/mzd-owner/issues">GitHub issues</a>.</p>
+</article></main>
+<footer>
+  <div class="wrap">
+    <p>MZD Owner es software libre (MIT) de JeronimoTech. Proyecto independiente, no afiliado con Mazda Motor Corporation.</p>
+    <nav aria-label="Legal"><a href="/">Inicio</a><a href="/privacidad">Privacidad</a><a href="/terminos">Términos</a><a href="https://github.com/jeronimotech/mzd-owner/issues">Soporte</a></nav>
+  </div>
+</footer>
+</body>
+</html>
