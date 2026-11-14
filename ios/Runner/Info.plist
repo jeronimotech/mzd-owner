@@ -62,6 +62,9 @@
 	<string>Para convertir tu voz en preguntas para el asistente.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Para conectarte al puente mzd-kit en tu red local.</string>
+	<!-- Only HTTPS (exempt): skips the export-compliance question on every upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIBackgroundModes</key>
