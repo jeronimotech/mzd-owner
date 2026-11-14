@@ -1,6 +1,6 @@
 # mzd-owner · Mi Mazda
 
-**Your Mazda on your phone — and on the car's screen.** Live data over OBD-II, maintenance
+**Your car on your phone — and on the car's screen.** · https://mzdowner.app Live data over OBD-II, maintenance
 reminders, trouble codes explained by AI, a voice assistant, and CarPlay / Android Auto screens.
 Open source (MIT), built with Flutter. Part of the [mzd-kit](https://github.com/jeronimotech/mzd-kit) family.
 

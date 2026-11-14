@@ -104,7 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         const SizedBox(height: 32),
-        const Text('MZD Owner · código abierto (MIT)\nmzd-web-production.up.railway.app\nNo afiliada con Mazda Motor Corporation.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white24, fontSize: 12)),
+        const Text('MZD Owner · código abierto (MIT)\nmzdowner.app\nNo afiliada con Mazda Motor Corporation.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white24, fontSize: 12)),
       ],
     );
   }

@@ -10,10 +10,10 @@ language section (same format as opentransit-mobile). Field caps are Apple's / P
 | Play package | `com.jeronimotech.mzd_owner` |
 | Category | App Store: Navigation (secondary Utilities) · Play: Auto & Vehicles |
 | Age rating | 4+ / Everyone · free, no IAP, no ads |
-| Website | https://mzd-web-production.up.railway.app (Railway service `mzd-web`, source `web/`) |
-| Privacy policy | https://mzd-web-production.up.railway.app/privacidad |
-| Terms | https://mzd-web-production.up.railway.app/terminos |
-| Support | https://mzd-web-production.up.railway.app/#preguntas |
+| Website | https://mzdowner.app (Railway service `mzd-web`, source `web/`) |
+| Privacy policy | https://mzdowner.app/privacidad |
+| Terms | https://mzdowner.app/terminos |
+| Support | https://mzdowner.app/#preguntas |
 | Screenshots | `docs/store/ios/es/*.png` (1320×2868) · Play feature graphic `docs/store/android/feature.png` |
 
 # Spanish — `es-419`

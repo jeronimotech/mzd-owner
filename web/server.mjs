@@ -56,6 +56,12 @@ http.createServer((req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); return res.end(); }
   if (pathname === '/healthz') { res.writeHead(200, { 'Content-Type': 'text/plain' }); return res.end('ok'); }
+  // One canonical host: www.mzdowner.app → mzdowner.app
+  const host = String(req.headers.host || '');
+  if (host.startsWith('www.')) {
+    res.writeHead(301, { Location: `https://${host.slice(4)}${req.url}` });
+    return res.end();
+  }
 
   const trimmed = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
   if (REDIRECTS[trimmed]) { res.writeHead(301, { Location: REDIRECTS[trimmed] }); return res.end(); }
